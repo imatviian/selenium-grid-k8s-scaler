@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "selenium-grid-k8s-scaler.fullname" . }}
+  labels:
+    {{- include "selenium-grid-k8s-scaler.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "selenium-grid-k8s-scaler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "selenium-grid-k8s-scaler.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "selenium-grid-k8s-scaler.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          args:
+            - "python"
+            - "scaler.py"
+            - "-c"
+            - "/app/config.yaml"
+            - "-p"
+            - "{{ .Values.app.pidFile }}"
+            - "-l"
+            - "{{ .Values.app.logLevel }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          {{- if gt (len .Values.app.envSecrets) 0}}
+          {{- toYaml .Values.app.envSecrets | nindent 10 }}
+          {{- end }}
+          {{- if gt (len .Values.app.env) 0 }}
+          {{- range .Values.app.env }}
+          - name: {{ .name }}
+            value: {{ .value | quote }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: {{ .Chart.Name }}-config-volume
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      volumes:
+        - name: {{ .Chart.Name }}-config-volume
+          configMap:
+            name: {{ .Chart.Name }}-config
+            items:
+              - key: config.yaml
+                path: config.yaml
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
