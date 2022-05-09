@@ -210,15 +210,14 @@ if __name__ == "__main__":
                     debug(f"Deployment {target} does not need to scale down")
             await asleep(config["scaler"]["scale_down_interval"])
 
-    async def healthcheck(path: str) -> None:
-        while True:
-            await asleep(10)
-            with open(path, "w") as f:
-                f.write(str(getpid()))
+    async def write_pid(path: str) -> None:
+        await asleep(15)
+        with open(path, "w") as f:
+            f.write(str(getpid()))
 
     async def main() -> None:
         config = app_config(args.config)
-        await gather(upscaler(config), downscaler(config), healthcheck(args.pid_file))
+        await gather(upscaler(config), downscaler(config), write_pid(args.pid_file))
 
     try:
         run(main())
