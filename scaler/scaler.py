@@ -1,7 +1,7 @@
 from logging import debug, info, warning, error, basicConfig as logging_conf
-from os.path import exists
 from argparse import ArgumentParser
 from os import environ
+from os.path import exists
 from yaml import safe_load, YAMLError
 from requests import post, patch, ConnectionError
 from json import dumps, loads
@@ -186,7 +186,7 @@ if __name__ == "__main__":
                     debug(f"Deployment {target} does not need to scale down")
             await asleep(config["scaler"]["scale_down_interval"])
 
-    async def main():
+    async def main() -> None:
         parser = ArgumentParser()
         parser.add_argument("-c", "--config", type=str,
                                 required=False,
