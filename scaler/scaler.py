@@ -1,6 +1,6 @@
 from logging import debug, info, warning, error, basicConfig as logging_conf
 from argparse import ArgumentParser
-from os import environ
+from os import environ, getpid, remove
 from os.path import exists
 from yaml import safe_load, YAMLError
 from requests import post, patch, ConnectionError
@@ -141,6 +141,30 @@ def deployment_scale(config: dict, token: str, deployment: str, \
         warning(f"Failed to scale deployment {deployment} with error: {ca_path} not found")
 
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("-c", "--config", type=str,
+                            required=False,
+                            default="./config.default.yaml",
+                            help="Path to configuration file"
+                        )
+    parser.add_argument("-p", "--pid-file", type=str,
+                            required=False,
+                            default="./scaler.pid",
+                            help="Path to PID file"
+                        )
+    parser.add_argument("-l", "--log-level", type=str,
+                            required=False,
+                            default="info",
+                            help="Application logging level"
+                        )
+    args = parser.parse_args()
+    logging_level = args.log_level
+    logging_format = "%(asctime)s %(levelname)s %(message)s"
+    logging_conf(format = logging_format,
+                            level=logging_level.upper(),
+                            datefmt="%d-%m-%Y %H:%M:%S"
+                    )
+
     async def upscaler(config: dict) -> None:
         deployments = config["deployments"]
         token = kube_api_token(config)
@@ -186,30 +210,22 @@ if __name__ == "__main__":
                     debug(f"Deployment {target} does not need to scale down")
             await asleep(config["scaler"]["scale_down_interval"])
 
+    async def healthcheck(path: str) -> None:
+        while True:
+            await asleep(10)
+            with open(path, "w") as f:
+                f.write(str(getpid()))
+
     async def main() -> None:
-        parser = ArgumentParser()
-        parser.add_argument("-c", "--config", type=str,
-                                required=False,
-                                default="./config.default.yaml",
-                                help="Path to configuration file"
-                            )
-        parser.add_argument("-l", "--log-level", type=str,
-                                required=False,
-                                default="info",
-                                help="Application logging level"
-                            )
-        args = parser.parse_args()
-        logging_level = args.log_level
-        logging_format = "%(asctime)s %(levelname)s %(message)s"
-        logging_conf(format = logging_format,
-                                level=logging_level.upper(),
-                                datefmt="%d-%m-%Y %H:%M:%S"
-                        )
         config = app_config(args.config)
-        await gather(upscaler(config), downscaler(config))
+        await gather(upscaler(config), downscaler(config), healthcheck(args.pid_file))
 
     try:
         run(main())
     except KeyboardInterrupt:
+        try:
+            remove(args.pid_file)
+        except FileNotFoundError:
+            pass
         info("Interrupted -> Exit")
         exit(130)
