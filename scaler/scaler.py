@@ -165,9 +165,8 @@ if __name__ == "__main__":
                             datefmt="%d-%m-%Y %H:%M:%S"
                     )
 
-    async def upscaler(config: dict) -> None:
+    async def upscaler(config: dict, token: str) -> None:
         deployments = config["deployments"]
-        token = kube_api_token(config)
         info("Starting upscaler")
         while True:
             load_map = metrics(config)
@@ -185,9 +184,8 @@ if __name__ == "__main__":
                     debug(f"Deployment {target} does not need to scale up")
             await asleep(config["scaler"]["scale_up_interval"])
 
-    async def downscaler(config: dict) -> None:
+    async def downscaler(config: dict, token: str) -> None:
         deployments = config["deployments"]
-        token = kube_api_token(config)
         info("Starting downscaler")
         while True:
             load_map = metrics(config)
@@ -217,7 +215,8 @@ if __name__ == "__main__":
 
     async def main() -> None:
         config = app_config(args.config)
-        await gather(upscaler(config), downscaler(config), write_pid(args.pid_file))
+        token = kube_api_token(config)
+        await gather(upscaler(config, token), downscaler(config, token), write_pid(args.pid_file))
 
     try:
         run(main())
