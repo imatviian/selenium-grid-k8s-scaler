@@ -2,34 +2,45 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# -- Replica count of the selenium-grid-k8s-scaler pod
 replicaCount: 1
 image:
+  # -- Image repository
   repository: "imatviian/selenium-grid-k8s-scaler"
+  # -- Image pull policy
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+  # -- Overrides the image tag whose default is the chart appVersion
   tag: ""
 
+# -- base64 encoded image registry secret
+dockerconfigjson: ""
+# -- Use this only if you dont want to use dockerconfig secret
 imagePullSecrets: []
+#  - name: my-imagepullsecret
+# -- Replaces the name of the chart in the Chart.yaml file
 nameOverride: ""
+# -- Completely replaces the generated name
 fullnameOverride: ""
 
 # -- App sepecific vars
 app:
-  pidFile: scaler.pid
+  # -- Path to the application PID file relatively to the app working directory
+  pidFilePath: scaler.pid
+  # -- Application log level: debug|info|warning|error
   logLevel: info
   config: |
     scaler:
-      scale_up_interval: 15
-      scale_down_interval: 60
+      scale_up_interval: 30
+      scale_down_interval: 30
     selenium:
       url: "http://localhost:4444"
     kubernetes:
       api_url: "https://kubernetes.default.svc.cluster.local"
-      api_version: "apps/v1"
       auth_token_path: "/var/run/secrets/kubernetes.io/serviceaccount/token"
       ca_cert_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     deployments:
       default-deployment:
+        api_version: "apps/v1"
         namespace: "default"
         stereotype_selector: "browserName"
         stereotype_selector_value: "chrome"
@@ -38,40 +49,58 @@ app:
         scaling_step: 1
         scale_up_threshold: 1.0
         scale_down_threshold: 0.7
+  # -- Environment variables
+  env: []
   # env:
   # - name: FOO
   #   value: "bar"
-  env: []
+  # -- Environment variables created from external Kubernetes Secret
   envSecrets: []
+  # - name: my-secret
+  #   valueFrom:
+  #     secretKeyRef:
+  #       key: foo
+  #       name: bar
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  # -- Name of the service account to use. If not set and create is true, a name is generated using the fullname template
+  name: "selenium-grid-scaler-sa"
 
 podSecurityPolicy:
+  # -- Enable/Disable PSP
   enabled: true
 
+# -- Specific pod annotations
 podAnnotations: {}
-podSecurityContext:
-  fsUser: 65534
-  fsGroup: 65534
 securityContext:
-  readOnlyRootFilesystem: true
+  # -- Allow or not allow to run application as root user
   runAsNonRoot: true
+  # -- Run as specified UID (nobody is reccomended default)
   runAsUser: 65534
+  # -- Run as specified GID (nogroup is reccomended default)
+  runAsGroup: 65534
+  # -- File system ownership (nobody is reccomended default)
+  fsGroup: 65534
 
 resources:
   limits:
+    # -- CPU hard limit
     cpu: 100m
+    # -- Memory hard limit
     memory: 128Mi
   requests:
+    # -- Requests cpu value
     cpu: 100m
+    # -- Requests memory value
     memory: 64Mi
+
+# -- Specific node selectors
 nodeSelector: {}
+# -- Specific toleration options
 tolerations: []
+# -- Specific affinity options
 affinity: {}

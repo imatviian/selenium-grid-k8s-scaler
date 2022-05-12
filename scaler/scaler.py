@@ -112,10 +112,9 @@ def drain_node(config: dict, id: str) -> None:
         error(f"{api_url} connection error -> {r_err}")
         exit(1)
 
-def deployment_scale(config: dict, token: str, deployment: str, \
+def deployment_scale(config: dict, token: str, api_v: str, deployment: str, \
                                 namespace: str, replicas: int) -> None:
     config = config["kubernetes"]
-    api_v = config['api_version']
     ca_path = config["ca_cert_path"]
     api_headers = {
             "Authorization": f"Bearer {token}",
@@ -165,13 +164,14 @@ if __name__ == "__main__":
                             datefmt="%d-%m-%Y %H:%M:%S"
                     )
 
-    async def upscaler(config: dict) -> None:
+    async def upscaler(config: dict, token: str) -> None:
         deployments = config["deployments"]
-        token = kube_api_token(config)
         info("Starting upscaler")
         while True:
             load_map = metrics(config)
             for target in load_map:
+                api_v = deployments[target]["api_version"]
+                namespace = deployments[target]["namespace"]
                 if deployments[target]["scale_up_threshold"] > 1.0:
                     threshold = 1.0
                 else:
@@ -179,19 +179,19 @@ if __name__ == "__main__":
                 if load_map[target]["loadIndex"] >= threshold and \
                                 load_map[target]["nodeCount"] < deployments[target]["max_replicas"]:
                     replicas = load_map[target]["nodeCount"] + deployments[target]["scaling_step"]
-                    deployment_scale(config, token, target,
-                                        deployments[target]["namespace"], replicas)
+                    deployment_scale(config, token, api_v, target, namespace, replicas)
                 else:
                     debug(f"Deployment {target} does not need to scale up")
             await asleep(config["scaler"]["scale_up_interval"])
 
-    async def downscaler(config: dict) -> None:
+    async def downscaler(config: dict, token: str) -> None:
         deployments = config["deployments"]
-        token = kube_api_token(config)
         info("Starting downscaler")
         while True:
             load_map = metrics(config)
             for target in load_map:
+                api_v = deployments[target]["api_version"]
+                namespace = deployments[target]["namespace"]
                 if deployments[target]["scale_down_threshold"] < 0.0:
                     threshold = 0.0
                 else:
@@ -204,8 +204,7 @@ if __name__ == "__main__":
                         if replicas > deployments[target]["min_replicas"]:
                             replicas = replicas - deployments[target]["scaling_step"]
                             drain_node(config, node["id"])
-                            deployment_scale(config, token, target,
-                                                deployments[target]["namespace"], replicas)
+                            deployment_scale(config, token, api_v, target, namespace, replicas)
                 else:
                     debug(f"Deployment {target} does not need to scale down")
             await asleep(config["scaler"]["scale_down_interval"])
@@ -217,7 +216,8 @@ if __name__ == "__main__":
 
     async def main() -> None:
         config = app_config(args.config)
-        await gather(upscaler(config), downscaler(config), write_pid(args.pid_file))
+        token = kube_api_token(config)
+        await gather(upscaler(config, token), downscaler(config, token), write_pid(args.pid_file))
 
     try:
         run(main())
