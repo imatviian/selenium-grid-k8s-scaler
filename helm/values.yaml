@@ -28,7 +28,6 @@ app:
   pidFilePath: scaler.pid
   # -- Application log level: debug|info|warning|error
   logLevel: info
-  # -- Application config
   config: |
     scaler:
       scale_up_interval: 30
