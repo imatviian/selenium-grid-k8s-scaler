@@ -1,0 +1,9 @@
+repos:
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: v1.2.0
+    hooks:
+      - id: helm-docs
+        args:
+          - --chart-search-root=.
+          - --template-files=./_templates.gotmpl
+          - --template-files=README.md.gotmpl
