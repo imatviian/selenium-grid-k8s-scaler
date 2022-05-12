@@ -23,13 +23,12 @@ A Helm chart for Kubernetes
 | nameOverride | string | `""` | Replaces the name of the chart in the Chart.yaml file |
 | nodeSelector | object | `{}` | Specific node selectors |
 | podAnnotations | object | `{}` | Specific pod annotations |
-| podSecurityPolicy.enabled | bool | `true` | Enable/Disable PSP |
+| rbac.enabled | bool | `true` | Enable/Disable RBAC |
 | replicaCount | int | `1` | Replica count of the selenium-grid-k8s-scaler pod |
 | resources.limits.cpu | string | `"100m"` | CPU hard limit |
 | resources.limits.memory | string | `"128Mi"` | Memory hard limit |
 | resources.requests.cpu | string | `"100m"` | Requests cpu value |
 | resources.requests.memory | string | `"64Mi"` | Requests memory value |
-| securityContext.fsGroup | int | `65534` | File system ownership (nobody is reccomended default) |
 | securityContext.runAsGroup | int | `65534` | Run as specified GID (nogroup is reccomended default) |
 | securityContext.runAsNonRoot | bool | `true` | Allow or not allow to run application as root user |
 | securityContext.runAsUser | int | `65534` | Run as specified UID (nobody is reccomended default) |
