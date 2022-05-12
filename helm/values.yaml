@@ -70,8 +70,8 @@ serviceAccount:
   # -- Name of the service account to use. If not set and create is true, a name is generated using the fullname template
   name: "selenium-grid-scaler-sa"
 
-podSecurityPolicy:
-  # -- Enable/Disable PSP
+rbac:
+  # -- Enable/Disable RBAC
   enabled: true
 
 # -- Specific pod annotations
@@ -83,8 +83,6 @@ securityContext:
   runAsUser: 65534
   # -- Run as specified GID (nogroup is reccomended default)
   runAsGroup: 65534
-  # -- File system ownership (nobody is reccomended default)
-  fsGroup: 65534
 
 resources:
   limits:
