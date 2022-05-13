@@ -5,7 +5,7 @@ from os.path import exists
 from yaml import safe_load, YAMLError
 from requests import post, patch, ConnectionError
 from json import dumps, loads
-from asyncio import gather, sleep as asleep, run, gather
+from asyncio import run, gather, sleep as asleep
 
 def app_config(path: str) -> dict:
     try:
