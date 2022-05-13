@@ -4,7 +4,5 @@ metadata:
     name: {{ .Chart.Name }}-config
     namespace: {{ .Release.Namespace }}
 data:
-{{- range  $val := toStrings .Values.app.config }}
   config.yaml: |
-{{ $val | indent 4}}
-{{- end }}
+{{ toYaml .Values.app.config | default "{}" | indent 4 }}
