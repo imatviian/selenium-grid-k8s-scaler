@@ -1,6 +1,6 @@
 # selenium-grid-k8s-scaler
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -9,7 +9,13 @@ A Helm chart for Kubernetes
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Specific affinity options |
-| app | object | `{"config":"scaler:\n  scale_up_interval: 30\n  scale_down_interval: 30\nselenium:\n  url: \"http://localhost:4444\"\nkubernetes:\n  api_url: \"https://kubernetes.default.svc.cluster.local\"\n  auth_token_path: \"/var/run/secrets/kubernetes.io/serviceaccount/token\"\n  ca_cert_path: \"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt\"\ndeployments:\n  default-deployment:\n    api_version: \"apps/v1\"\n    namespace: \"default\"\n    stereotype_selector: \"browserName\"\n    stereotype_selector_value: \"chrome\"\n    min_replicas: 1\n    max_replicas: 2\n    scaling_step: 1\n    scale_up_threshold: 1.0\n    scale_down_threshold: 0.7\n","env":[],"envSecrets":[],"logLevel":"info","pidFilePath":"scaler.pid"}` | App sepecific vars |
+| app.config.deployments | object | `{}` |  |
+| app.config.kubernetes.api_url | string | `"https://kubernetes.default.svc.cluster.local"` | Kubernetes API URL |
+| app.config.kubernetes.auth_token_path | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` | Path to file contains Kubernetes API token (ignored if KUBE_API_TOKEN env variable set) |
+| app.config.kubernetes.ca_cert_path | string | `"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"` | Path to file contains Kubernetes API CA certificate |
+| app.config.scaler.scale_down_interval | Seconds | `30` | The interval at which scaling down is performed |
+| app.config.scaler.scale_up_interval | Seconds | `30` | The interval at which scaling up is performed |
+| app.config.selenium.url | string | `"http://localhost:4444"` | Selenium Grid Router URL |
 | app.env | list | `[]` | Environment variables |
 | app.envSecrets | list | `[]` | Environment variables created from external Kubernetes Secret |
 | app.logLevel | string | `"info"` | Application log level: debug|info|warning|error |
