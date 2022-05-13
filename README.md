@@ -65,10 +65,9 @@ deployments: # Target deployments configuration section
 
 ## Load index
 
-Dimensionless value reflecting the current load of selenium nodes for a particular deployment
+Dimensionless value reflecting the current load of selenium nodes for a particular deployment.
 Сalculated by the following formula: `sum of all sessions in deployment`/`sum of all slots in deployment`
 
-For example: you started `15 sessions` on the node pool of `3` nodes with `10 slots` on each one
-In this case your load index will be `15 sessions`/`30 slots` = `0.5`
+For example: you started `15 sessions` on the node pool of `3` nodes with `10 slots` on each one. In this case your load index will be `15 sessions`/`30 slots` = `0.5`
 
-With `0%` sessions load index will be `0.0` and `1.0` with `100%`
+With `0%` sessions load index will be `0.0` and `1.0` with `100%` of sessions
