@@ -1,6 +1,6 @@
 # selenium-grid-k8s-scaler
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -9,7 +9,7 @@ A Helm chart for Kubernetes
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Specific affinity options |
-| app | object | `{"config":{"deployments":{},"kubernetes":{"api_url":"https://kubernetes.default.svc.cluster.local","auth_token_path":"/var/run/secrets/kubernetes.io/serviceaccount/token","ca_cert_path":"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"},"scaler":{"scale_down_interval":30,"scale_up_interval":30},"selenium":{"url":"http://localhost:4444"}},"env":[],"envSecrets":[],"logLevel":"info","pidFilePath":"scaler.pid"}` | App sepecific vars |
+| app.config.deployments | object | `{}` |  |
 | app.config.kubernetes.api_url | string | `"https://kubernetes.default.svc.cluster.local"` | Kubernetes API URL |
 | app.config.kubernetes.auth_token_path | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` | Path to file contains Kubernetes API token (ignored if KUBE_API_TOKEN env variable set) |
 | app.config.kubernetes.ca_cert_path | string | `"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"` | Path to file contains Kubernetes API CA certificate |

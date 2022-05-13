@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: imatviian/selenium-grid-k8s-scaler:latest
+          tags: imatviian/selenium-grid-k8s-scaler:1.0.0

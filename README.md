@@ -1,4 +1,4 @@
-# selenium-grid-k8s-scaler
+# selenium-grid-k8s-scaler ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square)
 Selenium Grid (v4) horizontal scaler for Kubernetes
 
 # Usage

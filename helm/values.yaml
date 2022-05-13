@@ -22,7 +22,6 @@ nameOverride: ""
 # -- Completely replaces the generated name
 fullnameOverride: ""
 
-# -- App sepecific vars
 app:
   # -- Path to the application PID file relatively to the app working directory
   pidFilePath: scaler.pid
@@ -44,7 +43,6 @@ app:
       auth_token_path: "/var/run/secrets/kubernetes.io/serviceaccount/token"
       # -- Path to file contains Kubernetes API CA certificate
       ca_cert_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-      # -- Target deployments configuration section
     deployments: {}
       # -- Deployment name
       # default-deployment:
