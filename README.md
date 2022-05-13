@@ -60,5 +60,18 @@ deployments: # Target deployments configuration section
 ```
 
 ## Optional environment variables
-- `KUBE_API_TOKEN` - Kubernetes API token
+- `KUBE_API_TOKEN` - Kubernetes API token (overrides token from `kubernetes.auth_token_path`)
 - `GRID_REGISTRATION_SECRET` - Selenium Grid registration secret
+
+## Load index
+
+Dimensionless value reflecting the current load of selenium nodes for a particular deployment
+Сalculated by the following formula: `sum of all sessions in deployment`/`sum of all slots in deployment`
+
+For example:
+
+You started `15 sessions` on the node pool of 3 nodes with `10 slots` on each one
+In this case your load index will be `15 sessions`/`30 slots` = `0,5`
+
+With `0%` sessions load index will be `0.0`
+With `100%` sessions load index will be `1.0`
