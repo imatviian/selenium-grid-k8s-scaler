@@ -70,8 +70,10 @@ Dimensionless value reflecting the current load of selenium nodes for a particul
 
 For example:
 
-You started `15 sessions` on the node pool of 3 nodes with `10 slots` on each one
-In this case your load index will be `15 sessions`/`30 slots` = `0,5`
+You started `15 sessions` on the node pool of `3` nodes with `10 slots` on each one
+
+In this case your load index will be `15 sessions`/`30 slots` = `0.5`
 
 With `0%` sessions load index will be `0.0`
+
 With `100%` sessions load index will be `1.0`
