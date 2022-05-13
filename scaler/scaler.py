@@ -178,7 +178,7 @@ if __name__ == "__main__":
                     threshold = deployments[target]["scale_up_threshold"]
                 if load_map[target]["loadIndex"] >= threshold and \
                                 load_map[target]["nodeCount"] < deployments[target]["max_replicas"]:
-                    replicas = load_map[target]["nodeCount"] + deployments[target]["scaling_step"]
+                    replicas = load_map[target]["nodeCount"] + deployments[target]["scale_up_step"]
                     deployment_scale(config, token, api_v, target, namespace, replicas)
                 else:
                     debug(f"Deployment {target} does not need to scale up")
@@ -202,7 +202,7 @@ if __name__ == "__main__":
                     replicas = load_map[target]["nodeCount"]
                     for node in drain_queue:
                         if replicas > deployments[target]["min_replicas"]:
-                            replicas = replicas - deployments[target]["scaling_step"]
+                            replicas = replicas - deployments[target]["scale_down_step"]
                             drain_node(config, node["id"])
                             deployment_scale(config, token, api_v, target, namespace, replicas)
                 else:
