@@ -17,6 +17,7 @@ deployments:
     stereotype_selector_value: "chrome"
     min_replicas: 1
     max_replicas: 2
-    scaling_step: 1
+    scale_up_step: 1
+    scale_down_step: 1
     scale_up_threshold: 1.0
     scale_down_threshold: 0.7
