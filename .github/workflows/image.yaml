@@ -5,7 +5,14 @@ name: ci
 on:
   push:
     branches:
-      - 'main'
+      - main
+    # paths:
+    #   - scaler/**
+
+env:
+  image_repo: imatviian/selenium-grid-k8s-scaler
+  ver_major: 1
+  ver_minor: 0
 
 jobs:
   build:
@@ -27,4 +34,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: imatviian/selenium-grid-k8s-scaler:1.0.0
+          tags: ${{ env.image_repo }}:${{ env.ver_major }}.${{ env.ver_minor }}.${{ github.run_number }}
