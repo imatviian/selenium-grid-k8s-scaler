@@ -6,8 +6,8 @@ on:
   push:
     branches:
       - main
-    # paths:
-    #   - scaler/**
+    paths:
+      - scaler/**
 
 env:
   image_repo: imatviian/selenium-grid-k8s-scaler
