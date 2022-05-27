@@ -62,15 +62,15 @@ def metrics(config: dict) -> dict:
             node_count = 0
             node_status = []
             for i in node_metrics:
-                if loads(i["stereotypes"])[0]["stereotype"][stereotype_selector] == stereotype_value \
-                                                                and i["status"] == "UP":
-                        sessions = sessions + int(i["sessionCount"])
-                        slots = slots + int(i["slotCount"])
-                        node_count = node_count + 1
-                        node_status.append({
-                            "id": i["id"],
-                            "sessionCount": i["sessionCount"]
-                        })
+                s_value = loads(i["stereotypes"])[0]["stereotype"][stereotype_selector]
+                if s_value == stereotype_value and i["status"] == "UP":
+                    sessions = sessions + int(i["sessionCount"])
+                    slots = slots + int(i["slotCount"])
+                    node_count = node_count + 1
+                    node_status.append({
+                        "id": i["id"],
+                        "sessionCount": i["sessionCount"]
+                    })
             if slots > 0:
                 load_index_map.update({
                     d:{
@@ -139,6 +139,78 @@ def deployment_scale(config: dict, token: str, api_v: str, deployment: str, \
     else:
         warning(f"Failed to scale deployment {deployment} with error: {ca_path} not found")
 
+async def write_pid(path: str) -> None:
+    await asleep(15)
+    try:
+        with open(path, "w") as f:
+            f.write(str(getpid()))
+    except FileNotFoundError:
+        error(f"{path} not found")
+        exit(1)
+    except IOError:
+        error(f"{path} is not accessible")
+        exit(1)
+
+async def upscaler(config: dict, token: str) -> None:
+    deployments = config["deployments"]
+    scale_up_interval = config["scaler"]["scale_up_interval"]
+    info("Starting upscaler")
+    while True:
+        load_map = metrics(config)
+        for target in load_map:
+            api_v = deployments[target]["api_version"]
+            namespace = deployments[target]["namespace"]
+            load_index = load_map[target]["loadIndex"]
+            node_count = load_map[target]["nodeCount"]
+            max_replicas = deployments[target]["max_replicas"]
+            scale_up_step = deployments[target]["scale_up_step"]
+            if deployments[target]["scale_up_threshold"] > 1.0:
+                debug("Upscaler threshold more than 1.0 -> Falling back to 1.0")
+                threshold = 1.0
+            else:
+                threshold = deployments[target]["scale_up_threshold"]
+            if load_index >= threshold and node_count < max_replicas:
+                repl_new = node_count + scale_up_step
+                if repl_new <= max_replicas:
+                    repl_desired = repl_new
+                else:
+                    repl_desired = max_replicas
+                deployment_scale(config, token, api_v, target, namespace, repl_desired)
+            else:
+                debug(f"Deployment {target} doesn't need to scale up")
+        await asleep(scale_up_interval)
+
+async def downscaler(config: dict, token: str) -> None:
+    deployments = config["deployments"]
+    scale_down_interval = config["scaler"]["scale_down_interval"]
+    info("Starting downscaler")
+    while True:
+        load_map = metrics(config)
+        for target in load_map:
+            api_v = deployments[target]["api_version"]
+            namespace = deployments[target]["namespace"]
+            load_index = load_map[target]["loadIndex"]
+            node_count = load_map[target]["nodeCount"]
+            node_status = load_map[target]["nodeStatus"]
+            min_replicas = deployments[target]["min_replicas"]
+            scale_down_step = deployments[target]["scale_down_step"]
+            if deployments[target]["scale_down_threshold"] < 0.0:
+                debug("Downscaler threshold less than 0.0 -> Falling back to 0.0")
+                threshold = 0.0
+            else:
+                threshold = deployments[target]["scale_down_threshold"]
+            if load_index < threshold and node_count > min_replicas:
+                drain_queue = list(filter(lambda x: x["sessionCount"] == 0, node_status))
+                replicas = node_count
+                for node in drain_queue[0:scale_down_step]:
+                    if node_count > min_replicas:
+                        replicas = replicas - 1
+                        drain_node(config, node["id"])
+                        deployment_scale(config, token, api_v, target, namespace, replicas)
+            else:
+                debug(f"Deployment {target} doesn't need to scale down")
+        await asleep(scale_down_interval)
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-c", "--config", type=str,
@@ -164,67 +236,22 @@ if __name__ == "__main__":
                             datefmt="%d-%m-%Y %H:%M:%S"
                     )
 
-    async def upscaler(config: dict, token: str) -> None:
-        deployments = config["deployments"]
-        info("Starting upscaler")
-        while True:
-            load_map = metrics(config)
-            for target in load_map:
-                api_v = deployments[target]["api_version"]
-                namespace = deployments[target]["namespace"]
-                if deployments[target]["scale_up_threshold"] > 1.0:
-                    threshold = 1.0
-                else:
-                    threshold = deployments[target]["scale_up_threshold"]
-                if load_map[target]["loadIndex"] >= threshold and \
-                                load_map[target]["nodeCount"] < deployments[target]["max_replicas"]:
-                    replicas = load_map[target]["nodeCount"] + deployments[target]["scale_up_step"]
-                    deployment_scale(config, token, api_v, target, namespace, replicas)
-                else:
-                    debug(f"Deployment {target} does not need to scale up")
-            await asleep(config["scaler"]["scale_up_interval"])
-
-    async def downscaler(config: dict, token: str) -> None:
-        deployments = config["deployments"]
-        info("Starting downscaler")
-        while True:
-            load_map = metrics(config)
-            for target in load_map:
-                api_v = deployments[target]["api_version"]
-                namespace = deployments[target]["namespace"]
-                if deployments[target]["scale_down_threshold"] < 0.0:
-                    threshold = 0.0
-                else:
-                    threshold = deployments[target]["scale_down_threshold"]
-                if load_map[target]["loadIndex"] < threshold and \
-                                load_map[target]["nodeCount"] > deployments[target]["min_replicas"]:
-                    drain_queue = filter(lambda x: x["sessionCount"] == 0, load_map[target]["nodeStatus"])
-                    replicas = load_map[target]["nodeCount"]
-                    for node in drain_queue:
-                        if replicas > deployments[target]["min_replicas"]:
-                            replicas = replicas - deployments[target]["scale_down_step"]
-                            drain_node(config, node["id"])
-                            deployment_scale(config, token, api_v, target, namespace, replicas)
-                else:
-                    debug(f"Deployment {target} does not need to scale down")
-            await asleep(config["scaler"]["scale_down_interval"])
-
-    async def write_pid(path: str) -> None:
-        await asleep(15)
-        with open(path, "w") as f:
-            f.write(str(getpid()))
-
     async def main() -> None:
         config = app_config(args.config)
         token = kube_api_token(config)
-        await gather(upscaler(config, token), downscaler(config, token), write_pid(args.pid_file))
+        await gather(
+            upscaler(config, token),
+            downscaler(config, token),
+            write_pid(args.pid_file)
+        )
 
     try:
         run(main())
     except KeyboardInterrupt:
+        info("Interrupted -> Exit")
+        exit(130)
+    finally:
         try:
             remove(args.pid_file)
         except FileNotFoundError:
             pass
-        info("Interrupted -> Exit")
-        exit(130)
